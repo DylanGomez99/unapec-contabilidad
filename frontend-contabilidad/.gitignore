@@ -1,0 +1,21 @@
+# Directores de dependencias
+node_modules/
+
+# Next.js compilaciones
+.next/
+out/
+
+# Producción
+build/
+dist/
+
+# Archivos del sistema operativo y IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

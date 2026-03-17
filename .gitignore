@@ -1,5 +1,19 @@
-### --- Java & Maven ---
+# --- FRONTEND (Node / Next.js) ---
+node_modules/
+.next/
+out/
+build/
+dist/
+.env*.local
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- BACKEND (Java / Maven) ---
 target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
 *.jar
 *.war
 *.ear
@@ -7,36 +21,37 @@ target/
 *.tar.gz
 *.rar
 
-### --- Spring Boot ---
-.mvn/wrapper/maven-wrapper.jar
-application-local.properties
-application-local.yml
-.help
-
-### --- IDEs & Editors ---
-# Zed Editor
-.zed/
-settings.json
-
-# IntelliJ IDEA
+# --- IDEs & EDITORS ---
+# IntelliJ
 .idea/
-*.iml
 *.iws
+*.iml
 *.ipr
+out/
 
 # VS Code
 .vscode/
+*.code-workspace
 
-### --- Operating System ---
+# Eclipse / STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# --- SYSTEM FILES ---
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
 desktop.ini
-
-### --- Docker & DB ---
-# Ignorar datos locales de la base de datos si usas volúmenes locales
-postgres-data/
-.env
-
-### --- Logs ---
-*.log
-logs/

@@ -1,36 +1,48 @@
 package com.contabilidad.unapec.backend_contabilidad.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-// Importaciones correctas para la base de datos
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-@Data 
-@NoArgsConstructor 
-@AllArgsConstructor 
-@Builder 
-@Entity 
+@Entity
 @Table(name = "monedas_t")
+@Data 
 public class Moneda {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incremental (1, 2, 3...)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "El código ISO es obligatorio")
+    @Size(min = 3, max = 3, message = "El código ISO debe tener 3 caracteres")
+    @Column(name = "codigo_iso", unique = true)
+    private String codigoIso;
+
+    @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
-    private String codigoIso; 
-    private BigDecimal tasaCambio;
-    private boolean estado;
+
+    // --- EL CAMPO QUE FALTABA ---
+    @NotBlank(message = "La descripción es obligatoria")
+    @Column(name = "descripcion") 
+    private String descripcion;
+
+    @NotNull(message = "La tasa de cambio es obligatoria")
+    @Column(name = "tasa_cambio")
+    private Double tasaCambio;
+
+    private Boolean estado;
+
+    @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
+    @PrePersist
+    protected void onCreate() {
+        this.fechaCreacion = LocalDateTime.now();
+        if (this.estado == null) {
+            this.estado = true; 
+        }
+    }
 }
