@@ -55,3 +55,6 @@ out/
 ._*
 Thumbs.db
 desktop.ini
+
+# --- DOCKER / BASE DE DATOS ---
+Docker/postgres-data/
