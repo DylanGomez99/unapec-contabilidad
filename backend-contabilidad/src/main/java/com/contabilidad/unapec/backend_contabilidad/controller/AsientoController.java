@@ -22,34 +22,28 @@ public class AsientoController {
 
     private final AsientoService service;
 
-    @GetMapping
-    @Operation(summary = "Listar todos los asientos")
+    @GetMapping(produces = "application/json")
+    @Operation(operationId = "listarAsientos", summary = "Listar todos los asientos")
     public List<Asiento> listarTodos() {
         return service.findAll();
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtener un asiento por ID")
+    @GetMapping(value = "/{id}", produces = "application/json")
+    @Operation(operationId = "obtenerAsientoPorId", summary = "Obtener un asiento por ID")
     public ResponseEntity<Asiento> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
-    // DTO encapsulando asiento y sus detalles
-    @Data
-    public static class AsientoRequest {
-        @Valid
-        private Asiento asiento;
-        private List<@Valid AsientoDetalle> detalles;
+    @PostMapping(produces = "application/json")
+    @Operation(operationId = "registrarAsiento", summary = "Registrar un nuevo asiento con sus detalles")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Asiento creado exitosamente")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
+    public ResponseEntity<Asiento> crear(@Valid @RequestBody Asiento asiento) {
+        return new ResponseEntity<>(service.create(asiento, asiento.getDetalles()), HttpStatus.CREATED);
     }
 
-    @PostMapping
-    @Operation(summary = "Registrar un nuevo asiento con sus detalles")
-    public ResponseEntity<Asiento> crear(@Valid @RequestBody AsientoRequest request) {
-        return new ResponseEntity<>(service.create(request.getAsiento(), request.getDetalles()), HttpStatus.CREATED);
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar/Anular un asiento")
+    @DeleteMapping(value = "/{id}", produces = "application/json")
+    @Operation(operationId = "eliminarAsiento", summary = "Eliminar/Anular un asiento")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

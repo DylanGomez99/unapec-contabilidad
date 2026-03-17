@@ -20,32 +20,34 @@ public class CuentaContableController {
 
     private final CuentaContableService service;
 
-    @GetMapping
-    @Operation(summary = "Listar todas las cuentas contables")
+    @GetMapping(produces = "application/json")
+    @Operation(operationId = "listarCuentas", summary = "Listar todas las cuentas contables")
     public List<CuentaContable> listarTodas() {
         return service.findAll();
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtener una cuenta por ID")
+    @GetMapping(value = "/{id}", produces = "application/json")
+    @Operation(operationId = "obtenerCuentaPorId", summary = "Obtener una cuenta por ID")
     public ResponseEntity<CuentaContable> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
-    @PostMapping
-    @Operation(summary = "Crear una nueva cuenta contable")
+    @PostMapping(produces = "application/json")
+    @Operation(operationId = "crearCuenta", summary = "Crear una nueva cuenta contable")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Cuenta creada exitosamente")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
     public ResponseEntity<CuentaContable> crear(@Valid @RequestBody CuentaContable cuenta) {
         return new ResponseEntity<>(service.create(cuenta), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar una cuenta contable existente")
+    @PutMapping(value = "/{id}", produces = "application/json")
+    @Operation(operationId = "actualizarCuenta", summary = "Actualizar una cuenta contable existente")
     public ResponseEntity<CuentaContable> actualizar(@PathVariable Long id, @Valid @RequestBody CuentaContable cuenta) {
         return ResponseEntity.ok(service.update(id, cuenta));
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar una cuenta contable")
+    @DeleteMapping(value = "/{id}", produces = "application/json")
+    @Operation(operationId = "eliminarCuenta", summary = "Eliminar una cuenta contable")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

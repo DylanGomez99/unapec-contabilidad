@@ -22,44 +22,57 @@ function saldoStr(saldo: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", minimumFractionDigits: 2 }).format(saldo);
 }
 
-function CuentaRow({ cuenta, nivel, expanded, onToggle, onEdit, onDelete }: { cuenta: CuentaContable; nivel: number; expanded: boolean; onToggle: () => void; onEdit: (c: CuentaContable) => void; onDelete: (c: CuentaContable) => void }) {
-  const hasChildren = !cuenta.aceptaMovimientos;
+function getRecursiveSaldo(cuenta: CuentaContable, allCuentas: CuentaContable[]): number {
+  if (cuenta.permiteMovimiento) return cuenta.saldo;
+  const children = allCuentas.filter((c) => c.cuentaPadreId === cuenta.id);
+  return children.reduce((sum, c) => sum + getRecursiveSaldo(c, allCuentas), 0);
+}
+
+function CuentaRow({ cuenta, nivel, expanded, onToggle, onEdit, onDelete, allCuentas }: { cuenta: CuentaContable; nivel: number; expanded: boolean; onToggle: () => void; onEdit: (c: CuentaContable) => void; onDelete: (c: CuentaContable) => void; allCuentas: CuentaContable[] }) {
+  const isParent = !cuenta.permiteMovimiento;
+  const saldo = getRecursiveSaldo(cuenta, allCuentas);
+
   return (
     <div
-      className="flex items-center gap-2 px-4 py-2.5 border-b border-black/[0.04] table-row-hover cursor-default"
-      style={{ paddingLeft: `${16 + nivel * 20}px` }}
+      className={`flex items-center gap-2 px-4 py-1.5 border-b border-black/[0.03] table-row-hover cursor-default ${isParent ? "bg-black/[0.02] border-b-black/[0.06] font-semibold" : ""}`}
     >
-      <button
-        onClick={onToggle}
-        className={`w-5 h-5 flex items-center justify-center rounded text-apple-secondary transition-transform flex-shrink-0 ${!hasChildren ? "opacity-0 pointer-events-none" : ""}`}
-      >
-        <ChevronRight size={13} className={`transition-transform ${expanded ? "rotate-90" : ""}`} />
-      </button>
-
       <div className="w-16 flex-shrink-0">
-        <span className="inline-flex items-center justify-center px-1.5 py-1 rounded-lg bg-blue-50 text-xs font-bold text-blue-600 font-mono text-[10px]">
-          {cuenta.codigo}
+        {cuenta.codigo ? (
+          <span className="inline-flex items-center justify-center px-1.5 py-1 rounded-lg bg-blue-50 text-xs font-bold text-blue-600 font-mono text-[10px]">
+            {cuenta.codigo}
+          </span>
+        ) : (
+          <span className="text-apple-secondary/40 font-mono text-xs">—</span>
+        )}
+      </div>
+
+      <div className="flex-1 flex items-center" style={{ paddingLeft: `${nivel * 16}px` }}>
+        <span
+          className={`text-sm ${isParent ? "font-bold text-apple-text" : "font-medium text-apple-text/80"}`}
+        >
+          {cuenta.nombre}
         </span>
       </div>
 
-      <span className={`text-sm flex-1 ${nivel === 0 ? "font-bold text-apple-text" : nivel === 1 ? "font-semibold text-apple-text" : "font-medium text-apple-text/80"}`}>
-        {cuenta.nombre}
-      </span>
+      <div className="hidden md:block w-24 text-center flex-shrink-0">
+        <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full ${TIPO_COLORS[(cuenta.tipo as any)?.nombre] || "bg-gray-50 text-gray-700"}`}>
+          {(cuenta.tipo as any)?.nombre || "—"}
+        </span>
+      </div>
 
-      <span className={`hidden md:inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${TIPO_COLORS[(cuenta.tipo as any)?.nombre] || "bg-gray-50 text-gray-700"}`}>
-        {(cuenta.tipo as any)?.nombre || "—"}
+      <span className="hidden lg:block text-xs text-apple-secondary flex-shrink-0 w-20 text-right">
+        {cuenta.origen?.toUpperCase() === "DEBITO" ? "Deudora" : cuenta.origen?.toUpperCase() === "CREDITO" ? "Acreedora" : cuenta.origen || "—"}
       </span>
-
-      <span className="hidden lg:block text-xs text-apple-secondary flex-shrink-0 w-20 text-right">{cuenta.naturaleza}</span>
 
       <span className="text-sm font-mono text-right flex-shrink-0 w-36 hidden md:block">
-        {cuenta.aceptaMovimientos ? saldoStr(cuenta.saldo) : "—"}
+        {saldoStr(saldo)}
       </span>
 
-      <div className="flex-shrink-0">
+      <div className="w-16 flex-shrink-0">
         <StatusBadge active={cuenta.estado} />
       </div>
-      <div className="flex-shrink-0 w-20 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+      <div className="flex-shrink-0 w-20 flex justify-end gap-1 opacity-100 transition-opacity">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(cuenta); }}
           className="p-1.5 rounded-lg text-apple-secondary hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -158,7 +171,7 @@ export default function CuentasPage() {
 
   const visibleCuentas = filtered.filter(isVisible);
 
-  const totalActivos = cuentas.filter(c => (c.tipo as any)?.nombre === "ACTIVO" && c.aceptaMovimientos).reduce((s, c) => s + c.saldo, 0);
+  const totalActivos = cuentas.filter(c => (c.tipo as any)?.nombre === "ACTIVO" && c.permiteMovimiento).reduce((s, c) => s + c.saldo, 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -168,11 +181,12 @@ export default function CuentasPage() {
         {/* Summary cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {(["ACTIVO","PASIVO","PATRIMONIO","INGRESO","GASTO"] as TipoCuenta[]).map((tipoNombre: any) => {
-            const count = cuentas.filter(c => (c.tipo as any)?.nombre?.toUpperCase() === tipoNombre).length;
+            const rootCuentas = cuentas.filter(c => (c.tipo as any)?.nombre?.toUpperCase() === tipoNombre && !c.cuentaPadreId);
+            const totalSaldo = rootCuentas.reduce((s, c) => s + getRecursiveSaldo(c, cuentas), 0);
             return (
-              <div key={tipoNombre} className="bg-white rounded-2xl border border-black/[0.06] shadow-apple px-4 py-3 flex items-center gap-3">
-                <span className={`text-[11px] font-bold px-2 py-1 rounded-lg ${TIPO_COLORS[tipoNombre]}`}>{tipoNombre}</span>
-                <span className="text-lg font-bold text-apple-text">{count}</span>
+              <div key={tipoNombre} className="bg-white rounded-2xl border border-black/[0.06] shadow-apple px-4 py-3">
+                <p className={`text-[11px] font-bold ${TIPO_COLORS[tipoNombre]} inline-block px-2 py-0.5 rounded-lg`}>{tipoNombre}</p>
+                <p className="text-base font-bold text-apple-text mt-1.5">{saldoStr(totalSaldo)}</p>
               </div>
             );
           })}
@@ -203,11 +217,10 @@ export default function CuentasPage() {
         <div className="bg-white rounded-2xl border border-black/[0.06] shadow-apple overflow-hidden">
           {/* Header row */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-black/[0.06] bg-apple-gray/60 text-[11px] font-semibold text-apple-secondary uppercase tracking-wider">
-            <div className="w-5 flex-shrink-0" />
             <div className="w-16 flex-shrink-0">Código</div>
             <div className="flex-1">Nombre</div>
             <div className="hidden md:block w-24 text-center flex-shrink-0">Tipo</div>
-            <div className="hidden lg:block w-20 text-right flex-shrink-0">Naturaleza</div>
+            <div className="hidden lg:block w-20 text-right flex-shrink-0">Origen</div>
             <div className="hidden md:block w-36 text-right flex-shrink-0">Saldo</div>
             <div className="w-16 flex-shrink-0">Estado</div>
             <div className="w-20 text-right flex-shrink-0">Acciones</div>
@@ -234,6 +247,7 @@ export default function CuentasPage() {
                   onToggle={() => toggleExpand(c.id)}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  allCuentas={cuentas}
                 />
               </div>
             ))

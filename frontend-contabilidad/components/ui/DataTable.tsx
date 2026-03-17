@@ -26,6 +26,12 @@ export function DataTable<T>({
   tableName = "Reporte",
 }: DataTableProps<T>) {
 
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
+
+  const totalPages = Math.ceil(data.length / pageSize);
+  const paginatedData = data.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   // Filter columns that should appear in exports
   const exportCols = columns.filter(c => !c.excludeFromExport);
 
@@ -142,7 +148,7 @@ export function DataTable<T>({
                 </td>
               </tr>
             ) : (
-              data.map((row) => (
+              paginatedData.map((row) => (
                 <tr
                   key={keyExtractor(row)}
                   className="group border-b border-black/[0.04] last:border-0 table-row-hover"
@@ -164,7 +170,41 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
+
+      {/* ── Pagination ────────────────────────────────────────── */}
+      {data.length > 0 && (
+        <div className="flex items-center justify-between px-5 py-2.5 bg-apple-gray/20 text-xs text-apple-secondary">
+          <div className="flex items-center gap-1.5">
+            <span>Mostrar</span>
+            <select 
+              value={pageSize} 
+              onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+              className="px-1.5 py-0.5 rounded border border-black/[0.1] bg-white text-apple-text outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+            >
+              {[5, 10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <span>filas</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              disabled={currentPage <= 1} 
+              onClick={() => setCurrentPage(p => p - 1)}
+              className="px-2 py-1 rounded border border-black/[0.08] bg-white hover:bg-black/[0.02] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+            >
+              Anterior
+            </button>
+            <span className="font-medium text-apple-text whitespace-nowrap">Página {currentPage} de {totalPages || 1}</span>
+            <button 
+              disabled={currentPage >= totalPages} 
+              onClick={() => setCurrentPage(p => p + 1)}
+              className="px-2 py-1 rounded border border-black/[0.08] bg-white hover:bg-black/[0.02] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   </div>
-  );
+);
 }

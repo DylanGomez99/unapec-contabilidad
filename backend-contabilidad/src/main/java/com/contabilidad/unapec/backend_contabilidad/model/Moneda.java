@@ -14,25 +14,31 @@ public class Moneda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @io.swagger.v3.oas.annotations.media.Schema(description = "ID único de la moneda", example = "1", accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @NotBlank(message = "El código ISO es obligatorio")
     @Size(min = 3, max = 3, message = "El código ISO debe tener 3 caracteres")
     @Column(name = "codigo_iso", unique = true)
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Código ISO de la moneda (3 caracteres)", example = "USD")
     private String codigoIso;
 
     @NotBlank(message = "El nombre es obligatorio")
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Nombre de la moneda", example = "Dólar")
     private String nombre;
 
     // --- EL CAMPO QUE FALTABA ---
     @NotBlank(message = "La descripción es obligatoria")
     @Column(name = "descripcion") 
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Descripción detallada de la moneda", example = "Dólar Estadounidense")
     private String descripcion;
 
     @NotNull(message = "La tasa de cambio es obligatoria")
     @Column(name = "tasa_cambio")
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Tasa de cambio respecto a la moneda base", example = "58.50")
     private Double tasaCambio;
 
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Estado de la moneda (true = Activo, false = Inactivo)", example = "true")
     private Boolean estado;
 
     @Column(name = "fecha_creacion", updatable = false)

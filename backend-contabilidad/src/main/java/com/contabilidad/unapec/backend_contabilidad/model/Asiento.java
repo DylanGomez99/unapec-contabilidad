@@ -14,26 +14,33 @@ public class Asiento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @io.swagger.v3.oas.annotations.media.Schema(description = "ID único del asiento", example = "1", accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @NotBlank(message = "La descripción es obligatoria")
     @Column(name = "descripcion", length = 255)
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Descripción o concepto del asiento contable", example = "Registro de gastos de papelería")
     private String descripcion;
 
     @ManyToOne
     @JoinColumn(name = "auxiliar_id", referencedColumnName = "id")
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Auxiliar que registra el asiento")
     private Auxiliar auxiliar;
 
     @Column(name = "fecha_asiento")
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Fecha en que se registra el asiento", example = "2026-03-17")
     private LocalDate fechaAsiento;
 
     @Column(name = "monto_total", precision = 18, scale = 2)
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Suma total de los movimientos (Debe cuadrar Débitos = Créditos)", example = "1500.00")
     private BigDecimal montoTotal;
 
     @OneToMany(mappedBy = "asiento", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Lista de detalles/movimientos del asiento")
     private java.util.List<AsientoDetalle> detalles = new java.util.ArrayList<>();
 
     @Column(name = "estado")
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Estado del asiento (true = Activo, false = Anulado)", example = "true")
     private Boolean estado;
 
     @PrePersist

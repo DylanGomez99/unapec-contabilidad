@@ -24,15 +24,15 @@ public class MonedaController {
 
     private final MonedaService monedaService;
 
-    @GetMapping
-    @Operation(summary = "Listar todas las monedas", 
+    @GetMapping(produces = "application/json")
+    @Operation(operationId = "listarMonedas", summary = "Listar todas las monedas", 
                description = "Retorna una lista de todas las monedas registradas en el sistema de contabilidad.")
     public List<Moneda> listarTodas() {
         return monedaService.listarTodas();
     }
 
-    @PostMapping
-    @Operation(summary = "Registrar nueva moneda", 
+    @PostMapping(produces = "application/json")
+    @Operation(operationId = "crearMoneda", summary = "Registrar nueva moneda", 
                description = "Crea una nueva moneda. El ID y la fecha de creación se generan automáticamente.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Moneda creada con éxito",
@@ -48,8 +48,10 @@ public class MonedaController {
         return new ResponseEntity<>(nuevaMoneda, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar moneda", description = "Actualiza los datos de una moneda existente.")
+    @PutMapping(value = "/{id}", produces = "application/json")
+    @Operation(operationId = "actualizarMoneda", summary = "Actualizar moneda", description = "Actualiza los datos de una moneda existente.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Moneda actualizada con éxito")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
     public ResponseEntity<Moneda> actualizar(@PathVariable Long id, @Valid @RequestBody Moneda moneda) {
         // Asignamos el ID a la moneda antes de guardar para que JPA haga un update en vez de insert
         moneda.setId(id);
@@ -57,8 +59,8 @@ public class MonedaController {
         return ResponseEntity.ok(actualizada);
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar moneda", description = "Elimina físicamente una moneda de la base de datos por su ID.")
+    @DeleteMapping(value = "/{id}", produces = "application/json")
+    @Operation(operationId = "eliminarMoneda", summary = "Eliminar moneda", description = "Elimina físicamente una moneda de la base de datos por su ID.")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         monedaService.eliminar(id);
         return ResponseEntity.noContent().build();

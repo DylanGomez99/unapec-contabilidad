@@ -9,6 +9,7 @@ import { TableColumn, Asiento, EstadoAsiento } from "@/types";
 import { getAsientos } from "@/lib/asientoService";
 import { getCuentas } from "@/lib/cuentaService";
 import { useTenant } from "@/lib/tenantService";
+import { getAuxiliares, Auxiliar } from "@/lib/auxiliarService";
 import AsientoFormModal from "./components/AsientoFormModal";
 
 const ESTADO_STYLES: Record<EstadoAsiento, string> = {
@@ -21,12 +22,13 @@ function saldoStr(n: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP" }).format(n);
 }
 
-function EstadoBadge({ estado }: { estado: EstadoAsiento }) {
+function EstadoBadge({ estado }: { estado: string }) {
+  const norm = (estado || "").toUpperCase() as EstadoAsiento;
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${ESTADO_STYLES[estado]}`}>
-      {estado === "CONFIRMADO" && <CheckCircle size={11} />}
-      {estado === "ANULADO" && <XCircle size={11} />}
-      {estado === "BORRADOR" && <FileText size={11} />}
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${ESTADO_STYLES[norm] || "bg-gray-50 text-gray-700"}`}>
+      {norm === "CONFIRMADO" && <CheckCircle size={11} />}
+      {norm === "ANULADO" && <XCircle size={11} />}
+      {norm === "BORRADOR" && <FileText size={11} />}
       {estado}
     </span>
   );
@@ -40,20 +42,24 @@ export default function AsientosPage() {
   const [detailAsiento, setDetailAsiento] = useState<Asiento | null>(null);
 
   const [cuentas, setCuentas] = useState<any[]>([]);
+  const [auxiliares, setAuxiliares] = useState<Auxiliar[]>([]);
 
   const fetchAsientosAndCuentas = useCallback(async () => {
     setLoading(true);
     try {
-      const [dataAsientos, dataCuentas] = await Promise.all([
+      const [dataAsientos, dataCuentas, dataAuxiliares] = await Promise.all([
         getAsientos(),
-        getCuentas()
+        getCuentas(),
+        getAuxiliares()
       ]);
       setAsientos(dataAsientos);
       setCuentas(dataCuentas);
+      setAuxiliares(dataAuxiliares);
     } catch (e: any) {
       console.error(e);
       setAsientos([]);
       setCuentas([]);
+      setAuxiliares([]);
     } finally {
       setLoading(false);
     }
@@ -96,8 +102,8 @@ export default function AsientosPage() {
   ];
 
   const totalDebe = asientos.reduce((s, a) => s + ((a as any).montoTotal || 0), 0);
-  const borradores = asientos.filter(a => a.estado === "BORRADOR").length;
-  const confirmados = asientos.filter(a => a.estado === "CONFIRMADO").length;
+  const borradores = asientos.filter(a => a.estado?.toUpperCase() === "BORRADOR").length;
+  const confirmados = asientos.filter(a => a.estado?.toUpperCase() === "CONFIRMADO").length;
 
   return (
     <div className="flex flex-col h-full">
@@ -146,6 +152,7 @@ export default function AsientosPage() {
         onClose={() => setModalOpen(false)}
         onSuccess={(a) => setAsientos((prev) => [a, ...prev])}
         cuentas={cuentas}
+        auxiliares={auxiliares}
       />
 
       {/* Detail modal */}

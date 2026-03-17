@@ -23,11 +23,12 @@ export interface CuentaContable {
   nombre: string;
   descripcion?: string;
   tipo: TipoCuenta;
-  naturaleza: NaturalezaCuenta;
+  origen?: string;
+  naterialeza?: NaturalezaCuenta; // fallback if any
   cuentaPadreId?: number;
   cuentaPadre?: Pick<CuentaContable, "id" | "codigo" | "nombre">;
   nivel: number;            // 1=grupo, 2=subgrupo, 3=cuenta, 4=subcuenta
-  aceptaMovimientos: boolean;
+  permiteMovimiento: boolean;
   saldo: number;
   estado: boolean;
   fechaCreacion?: string;
@@ -57,6 +58,7 @@ export interface Asiento {
   detalles: AsientoDetalle[];
   totalDebe: number;
   totalHaber: number;
+  auxiliarId?: number;
   usuarioId?: string;
   fechaCreacion?: string;
 }

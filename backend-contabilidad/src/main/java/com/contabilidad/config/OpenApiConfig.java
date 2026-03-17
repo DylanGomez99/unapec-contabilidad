@@ -22,22 +22,22 @@ public class OpenApiConfig {
 
         // Información de contacto
         Contact contact = new Contact();
-        contact.setName("Alan Roman");
-        contact.setEmail("A00116751@unapec.edu.do");
+        contact.setName("Alan Roman García");
+        contact.setEmail("aroman18@unapec.edu.do");
         contact.setUrl("https://github.com/tu-usuario"); // Opcional
 
         return new OpenAPI()
-            .info(new Info()
-                .title("🚀 Sistema de Contabilidad Central - UNAPEC")
-                .version("1.0.0")
-                .contact(contact)
-                .description("### API de Integración Contable\n" +
-                             "Esta API permite centralizar las operaciones de:\n" +
-                             "* **Nómina:** Gestión de pagos y empleados.\n" +
-                             "* **Inventario:** Control de activos y suministros.\n" +
-                             "* **Facturación:** Registro de ingresos y comprobantes fiscales.\n\n" +
-                             "**Tecnologías:** Java 21, Spring Boot 4, PostgreSQL.")
-                .license(new License().name("Apache 2.0").url("http://springdoc.org")))
-            .servers(List.of(devServer));
+                .info(new Info()
+                        .title("🚀 Sistema de Contabilidad Central - UNAPEC")
+                        .version("1.0.0")
+                        .contact(contact)
+                        .description("### API de Integración Contable\n" +
+                                "Esta API permite centralizar las operaciones de:\n" +
+                                "* **Nómina:** Gestión de pagos y empleados.\n" +
+                                "* **Inventario:** Control de activos y suministros.\n" +
+                                "* **Facturación:** Registro de ingresos y comprobantes fiscales.\n\n" +
+                                "**Tecnologías:** Java 21, Spring Boot 4, PostgreSQL.")
+                        .license(new License().name("Apache 2.0").url("http://springdoc.org")))
+                .servers(List.of(devServer));
     }
 }
