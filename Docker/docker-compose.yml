@@ -10,7 +10,44 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - accounting-net
 
-volumes:
-  postgres_data:
+  backend:
+    build:
+      context: ../backend-contabilidad
+      dockerfile: Dockerfile
+    container_name: backend-unapec
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=db-contabilidad
+      - DB_PORT=5432
+      - DB_NAME=contabilidad_db
+      - DB_USER=USER_DB
+      - DB_PASS=2026DB
+    depends_on:
+      - db-contabilidad
+    networks:
+      - accounting-net
+
+  frontend:
+    build:
+      context: ../frontend-contabilidad
+      dockerfile: Dockerfile
+    container_name: frontend-unapec
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+    depends_on:
+      - backend
+    networks:
+      - accounting-net
+
+networks:
+  accounting-net:
+    driver: bridge
