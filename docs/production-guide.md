@@ -54,9 +54,13 @@ docker-compose up --build -d
     ```
     *Asegúrate de que 'backend-unapec' diga '(healthy)'.*
 
-2.  **Probar Endpoints**:
-    -   Dashboard: `http://<IP-DE-TU-VPS>:3000`
-    -   Swagger UI: `http://<IP-DE-TU-VPS>:8080/swagger-ui.html`
+2.  **Probar Endpoints (Acceso Centralizado)**:
+    -   🚀 **Dashboard**: `http://<IP-DE-TU-VPS>/` (Puerto 80)
+    -   📘 **Swagger UI**: `http://<IP-DE-TU-VPS>/api/swagger-ui.html`
+
+### **Puertos Auxiliares (Debug)**:
+- Dashboard Directo: `http://<IP-DE-TU-VPS>:3000`
+- API Directo: `http://<IP-DE-TU-VPS>:8080/swagger-ui.html`
 
 ---
 
