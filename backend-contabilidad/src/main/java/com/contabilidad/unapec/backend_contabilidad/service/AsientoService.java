@@ -4,7 +4,9 @@ import com.contabilidad.unapec.backend_contabilidad.dto.AsientoResponseDTO;
 import com.contabilidad.unapec.backend_contabilidad.exception.ResourceNotFoundException;
 import com.contabilidad.unapec.backend_contabilidad.model.Asiento;
 import com.contabilidad.unapec.backend_contabilidad.model.AsientoDetalle;
+import com.contabilidad.unapec.backend_contabilidad.model.CuentaContable;
 import com.contabilidad.unapec.backend_contabilidad.repository.AsientoRepository;
+import com.contabilidad.unapec.backend_contabilidad.repository.CuentaContableRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 public class AsientoService {
 
     private final AsientoRepository asientoRepository;
+    private final CuentaContableRepository cuentaRepository;
 
     /** Devuelve todos los asientos como DTOs enriquecidos (incluye auxiliar y moneda). */
     public List<AsientoResponseDTO> findAll() {
@@ -46,6 +49,15 @@ public class AsientoService {
 
         for (AsientoDetalle det : asiento.getDetalles()) {
             det.setAsiento(asiento); // Vinculación manual garantizada
+
+            // Validación de Existencia y Movimiento
+            CuentaContable cuentaDb = cuentaRepository.findById(det.getCuenta().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("La cuenta de catálogo con ID " + det.getCuenta().getId() + " no fue encontrada."));
+            
+            if (!Boolean.TRUE.equals(cuentaDb.getPermiteMovimiento())) {
+                throw new IllegalArgumentException("La cuenta '" + cuentaDb.getNombre() + "' (" + cuentaDb.getCodigo() + ") es una cuenta agrupadora/padre y no permite recibir transacciones directas.");
+            }
+
             if ("Debito".equalsIgnoreCase(det.getTipoMovimiento())) {
                 totalDebitos = totalDebitos.add(det.getMonto());
             } else if ("Credito".equalsIgnoreCase(det.getTipoMovimiento())) {
