@@ -23,19 +23,26 @@ function money(n: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP" }).format(n);
 }
 
-function buildBalanza(cuentasDb: CuentaContable[], asientosDb: Asiento[]): FilaBalanza[] {
+function buildBalanza(cuentasDb: CuentaContable[], asientosDb: Asiento[], periodo: string): FilaBalanza[] {
+  // 1. Filtrar asientos: Solo activos y que coincidan con el periodo (ej. '2026-03-15' startsWith '2026-03')
+  const asientosDelPeriodo = asientosDb.filter(
+    (a) => a.estado === true && a.fechaAsiento && a.fechaAsiento.startsWith(periodo)
+  );
+
   return cuentasDb
     .filter((c) => c.permiteMovimiento)
     .map((c) => {
-      // Flatten all details from all asientos and find matching ones for this cuenta
+      // Flatten all details from matching asientos
       let debe = 0;
       let haber = 0;
-      for (const a of asientosDb) {
-        for (const d of a.detalles) {
-          if (d.cuenta?.codigo === c.codigo || d.cuenta?.id === c.id) {
+      for (const a of asientosDelPeriodo) {
+        for (const d of a.detalles || []) {
+          // Compatibilidad: Usar DTO plano (cuentaCodigo) o el objeto anidado legacy
+          const codigoDetalle = d.cuentaCodigo ?? d.cuenta?.codigo;
+          if (codigoDetalle === c.codigo) {
             const dh = getDebeHaber(d);
-            debe += dh.debe;
-            haber += dh.haber;
+            debe += dh.debe || 0;
+            haber += dh.haber || 0;
           }
         }
       }
@@ -82,7 +89,7 @@ export default function ReportesPage() {
     setLoading(true);
     try {
       const [dataCuentas, dataAsientos] = await Promise.all([getCuentas(), getAsientos()]);
-      setFilas(buildBalanza(dataCuentas, dataAsientos));
+      setFilas(buildBalanza(dataCuentas, dataAsientos, periodo));
     } catch (e: any) {
       console.error(e);
       setFilas([]);
