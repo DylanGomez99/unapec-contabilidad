@@ -97,28 +97,65 @@ npm run dev
 
 ---
 
-## 🔌 Guía de Integración para Módulos Externos
+## 🔌 Integración con API de Contabilidad: Módulo de Asientos
 
-Para registrar transacciones desde otros sistemas (Nómina, etc.):
+Este apartado expone las especificaciones técnicas para la integración de módulos externos (Facturación, Nómina, Inventario, etc.) con el sistema central de Contabilidad mediante la API REST.
 
-### Registro de Asientos (Journal Entries)
-*   **Método:** `POST`
-*   **Endpoint:** `/api/asientos`
-*   **Payload Ejemplo:**
+### 1. Concepto de Asiento Contable
+Un Asiento Contable es el registro transaccional indivisible que documenta un evento económico. Cada vez que un módulo externo ejecuta una operación que afecta el valor de la empresa, debe generar un asiento hacia esta API para ser procesado contablemente.
+
+**Regla de Negocio: Partida Doble**
+El sistema valida todas las transacciones basándose en la regla de **Partida Doble**. Cada asiento requiere un mínimo de dos movimientos de cuentas distribuyéndose bajo las siguientes naturalezas:
+* **Débito:** Entrada o incremento de fondos, activos o gastos.
+* **Crédito:** Salida, origen de los fondos, pasivos o ingresos.
+
+> [!IMPORTANT]
+> **Validación Estricta:** La sumatoria matemática de los registros marcados como `Debito` debe ser igual a la sumatoria de los registros marcados como `Credito`. Si el asiento no cumple con este balance (asiento "descuadrado"), la API rechazará la transacción.
+
+### 2. Flujo de Integración Esperado
+Al completar una transacción en su sistema origen, el módulo debe ejecutar una petición HTTP a Contabilidad indicando las cuentas impactadas. 
+El sistema de Contabilidad centraliza los balances en tiempo real, lo que significa que el módulo origen solo necesita enviar los identificadores (ID) de las cuentas (hijas y no agrupadoras) previamente mapeadas junto con el valor bruto.
+
+### 3. Especificación del Endpoint y Payload
+**Endpoint:** `POST /api/asientos`  
+**Content-Type:** `application/json`
+
+#### Cabecera (Raíz del Objeto) JSON
+| Propiedad | Tipo | Requerido | Descripción |
+| :--- | :--- | :---: | :--- |
+| `descripcion` | String | **Sí** | Concepto alfanumérico claro de la transacción. |
+| `fechaAsiento`| String | **Sí** | Fecha de ocurrencia en formato `YYYY-MM-DD`. |
+| `moneda` | Objeto | **Sí** | Identificador de la moneda (ej. `{ "id": 1 }`). |
+| `auxiliar` | Objeto | Opc. | Identificador del sistema/módulo de origen. |
+| `detalles` | Array | **Sí** | Colección de los movimientos financieros (Mín. 2). |
+
+#### Ejemplo Práctico de Payload
 ```json
 {
-  "descripcion": "Pago de nómina - Marzo",
+  "descripcion": "Pago Quincenal Nómina Operaciones - Periodo 1",
+  "fechaAsiento": "2026-04-15",
+  "moneda": { "id": 1 },
+  "auxiliar": { "id": 3 },
   "detalles": [
-    { "cuenta": { "id": 1 }, "tipoMovimiento": "Debito", "monto": 5000 },
-    { "cuenta": { "id": 3 }, "tipoMovimiento": "Credito", "monto": 5000 }
+    {
+      "cuenta": { "id": 610 }, 
+      "tipoMovimiento": "Debito",
+      "monto": 45000.00
+    },
+    {
+      "cuenta": { "id": 102 }, 
+      "tipoMovimiento": "Credito",
+      "monto": 45000.00
+    }
   ]
 }
 ```
 
-> [!TIP]
-> **Dashboard Inteligente**: El dashboard clasifica automáticamente los movimientos según el código de la cuenta:
-> - **Ingresos**: Cuentas que inician con **4**.
-> - **Gastos**: Cuentas que inician con **5** o **6**.
+### 4. Pruebas y Criterios de Aceptación
+Para autorizar la integración, el cliente HTTP debe prever 3 escenarios base:
+1. **Pase correcto (`201 Created`):** Débitos = Créditos hacia cuentas válidas. Retorna cuerpo del asiento con `id`.
+2. **Asiento Descuadrado (`400 Bad Request`):** Montos dispares. La API arroja `IllegalArgumentException: Asiento descuadrado`. 
+3. **Bloqueo Nivel Cuenta (`400 Bad Request`):** Transacción balanceada apuntando a una cuenta "Padre" o Agrupadora (no admite movimientos directos).
 
 ---
 
